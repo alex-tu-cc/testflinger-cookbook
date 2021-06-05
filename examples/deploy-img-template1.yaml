@@ -1,0 +1,7 @@
+job_queue: any_queue
+provision_data:
+  distro: target_img
+  timeout: 10
+test_data:
+  test_cmds: |
+    echo "testing"
