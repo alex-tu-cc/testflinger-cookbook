@@ -42,14 +42,13 @@ clear_env(){
 
 process_queue(){
     queue_id="$1"
-    if [ ssh_key != "#" ]; then
+    if [ "$ssh_key" != "#" ]; then
         ssh_key="- $ssh_key"
     fi
     # provision each queue.
 
 cat << EOF > "$OUT"/"$queue_id".yaml
 job_queue: $queue_id
-$provision_string
 reserve_data:
   ssh_keys:
     - lp:alextu
@@ -68,6 +67,10 @@ test_data:
     _run lspci -nnk
     _run lsusb
 EOF
+    if [ "$target_img" != "no_provision" ]; then
+        echo "provision_data:" >> "$OUT"/"$queue_id".yaml
+        echo "  distro: $target_img" >> "$OUT"/"$queue_id".yaml
+    fi
     cat "$OUT"/"$queue_id".yaml
     JOB=$(testflinger-cli submit "$OUT"/"$queue_id".yaml | grep job_id | cut -d' ' -f2);
     echo "\$ testflinger-cli poll $JOB" > "$OUT"/"$queue_id".log
@@ -146,9 +149,6 @@ main() {
             --img)
                 shift
                 target_img="$1"
-                if [ ! "no_provision" = "$1" ]; then
-                    provision_string="provision_data:\n  distro: $1"
-                fi
                 ;;
             --list-img)
                 list_all_imgs
