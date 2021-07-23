@@ -2,6 +2,7 @@
 set -x
 OUT=$PWD
 
+target_img="no_provision"
 n_machine=10
 occupy_time="10"
 ssh_key="#"
@@ -86,15 +87,23 @@ screen_result() {
     #while read -r provision_results; do
     if [ "$target_img" = "no_provision" ]; then
         status_to_check="test_status"
+        echo "screening $provision_results"
+        if [ "0" == "$(jq '{test_status} | .[]' < "$provision_results")" ]; then
+            basename "$provision_results"| cut -d '.' -f 1 >> "$OUT"/worked_queues
+            jq '{reserve_output} | .[]' < "$provision_results" | sed 's|\\n|\n|g' | sed 's|\\"|\n|g' | grep 'trictHostKeyChecking' >> "$OUT"/worked_queues
+            echo "" >> "$OUT"/worked_queues
+        else
+            echo "failed"
+        fi
     else
         status_to_check="provision_status"
-    fi
         echo "screening $provision_results"
         if [ "0" == "$(jq '{provision_status} | .[]' < "$provision_results")" ]; then
             basename "$provision_results"| cut -d '.' -f 1 >> "$OUT"/worked_queues
         else
             echo "failed"
         fi
+    fi
     #done < <(find "$OUT" -name "*.results")
     set +x
 }
